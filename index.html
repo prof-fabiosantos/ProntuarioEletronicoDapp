@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <title>Prontuário Eletrônico</title>
+    <meta charset="UTF-8"> <!-- Para suporte de caracteres especiais como acentos -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 14px 20px;
+            margin: 8px 0;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 4px;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+    </style>
+    <link rel="icon" href="favicon.ico">
+</head>
+<body>
+    <h1>Prontuário Eletrônico</h1>
+    
+    <input type="text" id="enderecoMedico" placeholder="Endereço do Médico" style="width: 300px;"><br><br>
+    <button onclick="adicionarMedico()" style="width: 150px;">Adicionar Médico</button><br><br>
+
+    <input type="text" id="enderecoMedicoAutorizado" placeholder="Endereço do Médico para Autorizar" style="width: 300px;"><br><br>
+    <button onclick="autorizarMedico()" style="width: 150px;">Autorizar Médico</button><br><br>
+
+    <input type="text" id="sintomas" placeholder="Sintomas" style="width: 200px;"><br><br>
+    <input type="text" id="diagnostico" placeholder="Diagnóstico" style="width: 200px;"><br><br>
+    <input type="text" id="tratamento" placeholder="Tratamento" style="width: 200px;"><br><br>
+    <button onclick="adicionarRegistro()" style="width: 200px;">Adicionar Registro Médico</button><br><br>
+
+    <input type="text" id="enderecoPaciente" placeholder="Endereço do Paciente" style="width: 300px;"><br><br>
+    <button onclick="verRegistro()" style="width: 200px;">Ver Registro do Paciente</button><br><br>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.0/dist/web3.min.js"></script>
+    <script>
+        // Inicializar web3 
+        // Instanciar o contrato
+        const contratoAddress = "0xaE3BB6bb8578bdE71417a13e7E3068d0F2fdB1FB";
+        const contratoABI = [
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "medico",
+                    "type": "address"
+                }
+            ],
+            "name": "adicionarMedico",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "paciente",
+                    "type": "address"
+                },
+                {
+                    "internalType": "string",
+                    "name": "sintomas",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "diagnostico",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "tratamento",
+                    "type": "string"
+                }
+            ],
+            "name": "adicionarRegistro",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "medico",
+                    "type": "address"
+                }
+            ],
+            "name": "autorizarMedico",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "medico",
+                    "type": "address"
+                }
+            ],
+            "name": "revogarMedico",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "name": "autorizacoes",
+            "outputs": [
+                {
+                    "internalType": "bool",
+                    "name": "",
+                    "type": "bool"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "name": "medicos",
+            "outputs": [
+                {
+                    "internalType": "bool",
+                    "name": "",
+                    "type": "bool"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "name": "registros",
+            "outputs": [
+                {
+                    "internalType": "string",
+                    "name": "sintomasCriptografados",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "diagnosticoCriptografado",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "tratamentoCriptografado",
+                    "type": "string"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "medico",
+                    "type": "address"
+                },
+                {
+                    "internalType": "address",
+                    "name": "paciente",
+                    "type": "address"
+                }
+            ],
+            "name": "verRegistro",
+            "outputs": [
+                {
+                    "internalType": "string",
+                    "name": "",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "",
+                    "type": "string"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ];  
+
+    // Iniciar web3
+    let web3, contractInstance;
+
+    async function initWeb3() {
+        if (window.ethereum) {
+            web3 = new Web3(window.ethereum);
+            await window.ethereum.enable();
+        } else if (window.web3) {
+            web3 = new Web3(window.web3.currentProvider);
+        } else {
+            console.error('No web3 provider detected');
+        }
+
+        contrato = new web3.eth.Contract(contratoABI, contratoAddress);
+    }
+            
+    // Funções criptográficas (NÃO USAR EM PRODUÇÃO)
+    function encrypt(text) {
+        return window.btoa(unescape(encodeURIComponent(text))); // Atualizado para suportar caracteres especiais
+    }
+
+    function decrypt(text) {
+        return decodeURIComponent(escape(window.atob(text))); // Atualizado para suportar caracteres especiais
+    }
+
+    async function adicionarMedico() {
+        const contas = await web3.eth.getAccounts();
+        const enderecoMedico = document.getElementById('enderecoMedico').value;
+        await contrato.methods.adicionarMedico(enderecoMedico).send({ from: contas[0] });
+    }
+
+    async function autorizarMedico() {
+        const contas = await web3.eth.getAccounts();
+        const enderecoMedico = document.getElementById('enderecoMedicoAutorizado').value;
+        await contrato.methods.autorizarMedico(enderecoMedico).send({ from: contas[0] });
+    }
+
+    async function adicionarRegistro() {
+        const contas = await web3.eth.getAccounts();
+        const sintomas = encrypt(document.getElementById('sintomas').value);
+        const diagnostico = encrypt(document.getElementById('diagnostico').value);
+        const tratamento = encrypt(document.getElementById('tratamento').value);
+        await contrato.methods.adicionarRegistro(contas[1], sintomas, diagnostico, tratamento).send({ from: contas[0] });
+    }
+   
+    async function verRegistro() {
+    const contas = await web3.eth.getAccounts();
+    const enderecoPaciente = document.getElementById('enderecoPaciente').value;
+    
+    // Verificar se o médico está autorizado
+    const autorizado = await contrato.methods.autorizacoes(enderecoPaciente, contas[0]).call({ from: contas[0] });
+
+    if (autorizado) {
+        // O médico está autorizado
+        const resultado = await contrato.methods.verRegistro(contas[0], enderecoPaciente).call({ from: contas[0] });
+        alert(`Sintomas: ${decrypt(resultado[0])}, Diagnóstico: ${decrypt(resultado[1])}, Tratamento: ${decrypt(resultado[2])}`);
+    } else {
+        // O médico não está autorizado
+        alert("Você não está autorizado para ver este registro médico.");
+    }
+}
+
+
+    async function initialize() {
+        await initWeb3();
+    }
+
+    initialize();
+    </script>
+</body>
+</html>
